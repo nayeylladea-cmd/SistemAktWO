@@ -1070,41 +1070,24 @@ document
 // POST DATA
 // =====================================================
 
-async function postData(
-    url,
-    data,
-    form
-) {
-
+async function postData(url, data, form) {
     try {
-
         let table = "";
 
-
         if (url === "/api/pelanggan") {
-
             table = "pelanggan";
-
         } else if (url === "/api/paket") {
-
             table = "paket_wedding";
-
         } else if (url === "/api/transaksi") {
-
             table = "transaksi_wedding";
-
         } else if (url === "/api/pembayaran") {
-
             table = "pembayaran";
-
         } else {
-
-            throw new Error(
-                "Endpoint tidak dikenali."
-            );
-
+            throw new Error("Endpoint tidak dikenali.");
         }
 
+        console.log("Data yang dikirim:", data);
+        console.log("Tabel tujuan:", table);
 
         await supabaseRequest(
             table,
@@ -1112,27 +1095,19 @@ async function postData(
             data
         );
 
-
         form.reset();
 
-
-        showToast(
-            "Data berhasil disimpan."
-        );
-
+        showToast("Data berhasil disimpan.");
 
         await loadData();
 
-
     } catch (error) {
-
-        console.error(error);
-
+        console.error("ERROR INSERT:", error);
 
         showToast(
-            "Gagal: " + error.message
+            "Gagal menyimpan data: " +
+            error.message
         );
-
     }
 }
 
