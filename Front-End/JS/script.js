@@ -1136,57 +1136,6 @@ async function postData(
     }
 }
 
-    try {
-
-        const response =
-            await fetch(
-                url,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify(data)
-                }
-            );
-
-
-        const result =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                result.error ||
-                "Gagal menyimpan data."
-            );
-        }
-
-
-        form.reset();
-
-        showToast(
-            "Data berhasil disimpan."
-        );
-
-
-        await loadData();
-
-    } catch (error) {
-
-        console.error(error);
-
-        showToast(
-            "Gagal: " + error.message
-        );
-    }
-}
-
 
 // =====================================================
 // DELETE DATA
@@ -1288,58 +1237,6 @@ async function deleteData(
             error.message
         );
 
-    }
-}
-
-    const confirmation =
-        confirm(
-            "Yakin ingin menghapus data ini?"
-        );
-
-
-    if (!confirmation) {
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                `/api/${type}/${id}`,
-                {
-                    method: "DELETE"
-                }
-            );
-
-
-        const result =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                result.error ||
-                "Gagal menghapus data."
-            );
-        }
-
-
-        showToast(
-            "Data berhasil dihapus."
-        );
-
-
-        await loadData();
-
-    } catch (error) {
-
-        console.error(error);
-
-        showToast(
-            "Gagal menghapus data."
-        );
     }
 }
 
