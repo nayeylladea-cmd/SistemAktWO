@@ -1,4 +1,15 @@
 // =====================================================
+// KONFIGURASI SUPABASE
+// =====================================================
+
+const SUPABASE_URL =
+    "https://wothkzsgirgntghxkqqr.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_HIsUWsYI5XYrg7FuV7EoRA_YGluMM6b";
+
+
+// =====================================================
 // GLOBAL DATA
 // =====================================================
 
@@ -7,6 +18,92 @@ let paketData = [];
 let transaksiData = [];
 let pembayaranData = [];
 
+
+// =====================================================
+// SUPABASE REQUEST
+// =====================================================
+
+async function supabaseRequest(
+    table,
+    method = "GET",
+    body = null,
+    query = ""
+) {
+
+    const url =
+        `${SUPABASE_URL}/rest/v1/${table}${query}`;
+
+    const options = {
+
+        method: method,
+
+        headers: {
+
+            "apikey":
+                SUPABASE_KEY,
+
+            "Authorization":
+                `Bearer ${SUPABASE_KEY}`,
+
+            "Content-Type":
+                "application/json",
+
+            "Prefer":
+                "return=representation"
+
+        }
+
+    };
+
+
+    if (body !== null) {
+
+        options.body =
+            JSON.stringify(body);
+
+    }
+
+
+    const response =
+        await fetch(url, options);
+
+
+    const text =
+        await response.text();
+
+
+    let data;
+
+
+    try {
+
+        data =
+            text
+                ? JSON.parse(text)
+                : null;
+
+    } catch {
+
+        data = text;
+
+    }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+
+            typeof data === "object"
+                ? JSON.stringify(data)
+                : data
+
+        );
+
+    }
+
+
+    return data;
+}
 
 // =====================================================
 // FORMAT RUPIAH
@@ -71,45 +168,85 @@ async function loadData() {
     try {
 
         const [
+
             pelangganResponse,
+
             paketResponse,
+
             transaksiResponse,
+
             pembayaranResponse
+
         ] = await Promise.all([
 
-            fetch("/api/pelanggan"),
+            supabaseRequest(
+                "pelanggan",
+                "GET",
+                null,
+                "?select=*&order=id_pelanggan.desc"
+            ),
 
-            fetch("/api/paket"),
+            supabaseRequest(
+                "paket_wedding",
+                "GET",
+                null,
+                "?select=*&order=id_paket.asc"
+            ),
 
-            fetch("/api/transaksi"),
+            supabaseRequest(
+                "transaksi_wedding",
+                "GET",
+                null,
+                "?select=*,pelanggan(nama_pelanggan),paket_wedding(nama_paket,harga)&order=id_transaksi.desc"
+            ),
 
-            fetch("/api/pembayaran")
+            supabaseRequest(
+                "pembayaran",
+                "GET",
+                null,
+                "?select=*,transaksi_wedding(id_transaksi,total_transaksi)&order=id_pembayaran.desc"
+            )
 
         ]);
 
 
         pelangganData =
-            await pelangganResponse.json();
+            pelangganResponse;
 
         paketData =
-            await paketResponse.json();
+            paketResponse;
 
         transaksiData =
-            await transaksiResponse.json();
+            transaksiResponse;
 
         pembayaranData =
-            await pembayaranResponse.json();
+            pembayaranResponse;
+
+
+        console.log("PELANGGAN:", pelangganData);
+
+        console.log("PAKET:", paketData);
+
+        console.log("TRANSAKSI:", transaksiData);
+
+        console.log("PEMBAYARAN:", pembayaranData);
 
 
         renderAll();
 
+
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Gagal mengambil data Supabase:",
+            error
+        );
+
 
         showToast(
-            "Gagal mengambil data dari server."
+            "Gagal mengambil data dari Supabase."
         );
+
     }
 }
 
@@ -941,6 +1078,66 @@ async function postData(
 
     try {
 
+        let table = "";
+
+
+        if (url === "/api/pelanggan") {
+
+            table = "pelanggan";
+
+        } else if (url === "/api/paket") {
+
+            table = "paket_wedding";
+
+        } else if (url === "/api/transaksi") {
+
+            table = "transaksi_wedding";
+
+        } else if (url === "/api/pembayaran") {
+
+            table = "pembayaran";
+
+        } else {
+
+            throw new Error(
+                "Endpoint tidak dikenali."
+            );
+
+        }
+
+
+        await supabaseRequest(
+            table,
+            "POST",
+            data
+        );
+
+
+        form.reset();
+
+
+        showToast(
+            "Data berhasil disimpan."
+        );
+
+
+        await loadData();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        showToast(
+            "Gagal: " + error.message
+        );
+
+    }
+}
+
+    try {
+
         const response =
             await fetch(
                 url,
@@ -999,6 +1196,100 @@ async function deleteData(
     type,
     id
 ) {
+
+    const confirmation =
+        confirm(
+            "Yakin ingin menghapus data ini?"
+        );
+
+
+    if (!confirmation) {
+
+        return;
+
+    }
+
+
+    try {
+
+        let table = "";
+
+        let primaryKey = "";
+
+
+        if (type === "pelanggan") {
+
+            table = "pelanggan";
+
+            primaryKey = "id_pelanggan";
+
+        }
+
+
+        else if (type === "paket") {
+
+            table = "paket_wedding";
+
+            primaryKey = "id_paket";
+
+        }
+
+
+        else if (type === "transaksi") {
+
+            table = "transaksi_wedding";
+
+            primaryKey = "id_transaksi";
+
+        }
+
+
+        else if (type === "pembayaran") {
+
+            table = "pembayaran";
+
+            primaryKey = "id_pembayaran";
+
+        }
+
+
+        else {
+
+            throw new Error(
+                "Jenis data tidak dikenali."
+            );
+
+        }
+
+
+        await supabaseRequest(
+            table,
+            "DELETE",
+            null,
+            `?${primaryKey}=eq.${id}`
+        );
+
+
+        showToast(
+            "Data berhasil dihapus."
+        );
+
+
+        await loadData();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        showToast(
+            "Gagal menghapus data: " +
+            error.message
+        );
+
+    }
+}
 
     const confirmation =
         confirm(
