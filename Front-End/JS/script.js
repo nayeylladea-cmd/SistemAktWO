@@ -164,89 +164,64 @@ function showToast(message) {
 // =====================================================
 
 async function loadData() {
-
     try {
+        console.log("Mulai mengambil data dari Supabase...");
 
-        const [
+        const pelangganResponse = await supabaseRequest(
+            "pelanggan",
+            "GET",
+            null,
+            "?select=*"
+        );
 
-            pelangganResponse,
+        console.log("PELANGGAN:", pelangganResponse);
 
-            paketResponse,
+        const paketResponse = await supabaseRequest(
+            "paket_wedding",
+            "GET",
+            null,
+            "?select=*"
+        );
 
-            transaksiResponse,
+        console.log("PAKET:", paketResponse);
 
-            pembayaranResponse
+        const transaksiResponse = await supabaseRequest(
+            "transaksi_wedding",
+            "GET",
+            null,
+            "?select=*"
+        );
 
-        ] = await Promise.all([
+        console.log("TRANSAKSI:", transaksiResponse);
 
-            supabaseRequest(
-                "pelanggan",
-                "GET",
-                null,
-                "?select=*&order=id_pelanggan.desc"
-            ),
+        const pembayaranResponse = await supabaseRequest(
+            "pembayaran",
+            "GET",
+            null,
+            "?select=*"
+        );
 
-            supabaseRequest(
-                "paket_wedding",
-                "GET",
-                null,
-                "?select=*&order=id_paket.asc"
-            ),
+        console.log("PEMBAYARAN:", pembayaranResponse);
 
-            supabaseRequest(
-                "transaksi_wedding",
-                "GET",
-                null,
-                "?select=*,pelanggan(nama_pelanggan),paket_wedding(nama_paket,harga)&order=id_transaksi.desc"
-            ),
-
-            supabaseRequest(
-                "pembayaran",
-                "GET",
-                null,
-                "?select=*,transaksi_wedding(id_transaksi,total_transaksi)&order=id_pembayaran.desc"
-            )
-
-        ]);
-
-
-        pelangganData =
-            pelangganResponse;
-
-        paketData =
-            paketResponse;
-
-        transaksiData =
-            transaksiResponse;
-
-        pembayaranData =
-            pembayaranResponse;
-
-
-        console.log("PELANGGAN:", pelangganData);
-
-        console.log("PAKET:", paketData);
-
-        console.log("TRANSAKSI:", transaksiData);
-
-        console.log("PEMBAYARAN:", pembayaranData);
-
+        pelangganData = pelangganResponse || [];
+        paketData = paketResponse || [];
+        transaksiData = transaksiResponse || [];
+        pembayaranData = pembayaranResponse || [];
 
         renderAll();
 
+        console.log("Semua data berhasil dimuat.");
 
     } catch (error) {
 
-        console.error(
-            "Gagal mengambil data Supabase:",
-            error
-        );
-
+        console.error("================================");
+        console.error("ERROR LOAD DATA:");
+        console.error(error);
+        console.error("================================");
 
         showToast(
             "Gagal mengambil data dari Supabase."
         );
-
     }
 }
 
